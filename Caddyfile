@@ -1,0 +1,8 @@
+:80 {
+    root * /app
+
+    @home path /
+    rewrite @home /home.php
+
+    php_server
+}

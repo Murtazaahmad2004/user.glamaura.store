@@ -1,0 +1,238 @@
+/* ---------- BLACK + SILVER + ROYAL BLUE THEME ---------- */
+:root {
+    /* --dark-bg: #0a0a0a; */
+    --dark-card-bg: #ffffff;
+    --text-light: #000000;
+    --accent-silver: #C0C0C0;
+    --glow-shadow: 0 0 8px #C0C0C0, 0 0 16px #C0C0C0, 0 0 24px #C0C0C0;
+}
+
+/* Global */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+body {
+    background: var(--dark-bg);
+    color: white;
+    scroll-behavior: smooth;
+    line-height: 1.6;
+    min-width: 1200px;
+}
+/* 🌸 Navbar */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #66996f;;
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 5px 5px rgba(192, 192, 192, 0.25);
+}
+nav .logo img {
+    height: 80px;
+    width: auto;
+    border-radius: 14px;
+    object-fit: cover;
+    padding: 4px;
+    transition: all 0.35s ease-in-out;
+}
+nav .logo img:hover {
+    transform: scale(1.1) rotate(-2deg);
+    border-radius: 18px;
+}
+/* NAVBAR BUTTONS - MATCHING YOUR PAGE BUTTON STYLE */
+.nav-links a {
+    color: white;
+    padding: 8px 14px;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+.nav-links a:hover {
+    background: rgba(30, 58, 138, 0.15);
+    color: white;
+}
+/* Buttons */
+.buttons {
+    background-color: var(--dark-bg); /* Black background */
+    color: #ffffff;                    /* White text */
+    padding: 10px 25px;
+    border-radius: 30px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    border: none;                      
+    outline: none;                     
+    box-shadow: none;                  
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.buttons:hover {
+    background-color: var(--highlight-blue); /* Royal Blue on hover */
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+        
+         /* 🌸 Shipping Policy Section */
+         .shipping {
+         max-width: 850px;
+         margin: 100px auto;
+         background: #0F3D2E;
+         padding: 50px 40px;
+         border-radius: 15px;
+         box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+         text-align: center;
+         }
+         .shipping h1 {
+         color: #ffffff;
+         font-size: 2.3rem;
+         margin-bottom: 25px;
+         text-transform: uppercase;
+         }
+         .shipping p {
+         color: #ffffff;
+         font-size: 1.05rem;
+         margin: 12px 0;
+         }
+         .shipping i {
+         color: #ffffff;
+         margin-right: 8px;
+         }
+/* 🌸 Footer */
+footer {
+    background: #0F3D2E;
+    padding: 10px 10px;
+    color: white;
+    text-align: center;
+}
+/* Footer container layout */
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 20px 0;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Footer headings */
+footer h3 {
+    text-shadow: none;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* Footer links */
+.footer-container a {
+    color: white;
+    text-decoration: none;
+    text-shadow: none;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.footer-container a:hover {
+    color: #76d7b1;
+}
+
+/* Footer paragraph (About section) */
+.footer-container p {
+    color: white;
+    text-shadow: none;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+/* Center About column */
+.footer-container .about-column {
+    flex: 1;
+    text-align: center;
+}
+
+/* Right column (Follow Us) alignment */
+.footer-container .social-column {
+    text-align: right;
+}
+
+/* ============================================
+   📌 GLOBAL RESPONSIVENESS
+============================================ */
+@media(max-width: 1400px) {
+    body {
+        min-width: auto;
+    }
+}
+
+/* ---------- RESPONSIVENESS ---------- */
+@media(max-width: 992px) {
+    nav {
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2px;
+        flex-wrap: nowrap;
+        width: auto;
+        overflow-x: auto;  /* <-- NEW: prevents hiding */
+        white-space: nowrap; /* <-- NEW: no wrapping */
+        scrollbar-width: none; /* Firefox hide scrollbar */
+    }
+
+    .nav-links::-webkit-scrollbar {
+        display: none; /* Chrome hide scrollbar */
+    }
+}
+
+/* RESPONSIVE SLIDER */
+@media(max-width: 600px) {
+    .slider {
+        height: 250px;
+    }
+
+    .caption h1 {
+        font-size: 1.5rem;
+    }
+}
+/* ---------- SMALL DEVICE FIXES ---------- */
+@media(max-width: 480px) {
+    nav .logo img {
+        height: 55px;
+    }
+
+    .product-info p {
+        font-size: 0.85rem;
+    }
+
+    .image-container {
+        height: 400px;
+    }
+}
+@media (max-width: 992px) {
+    footer p,
+    .footer-container p,
+    .footer-container,
+    .footer-container div {
+        text-align: center !important;
+    }
+
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+    }
+}
