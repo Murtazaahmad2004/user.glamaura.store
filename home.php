@@ -17,9 +17,9 @@ $conn = mysqli_init();
 
 mysqli_ssl_set(
     $conn,
-    NULL,       // client key
-    NULL,       // client certificate
-    $ssl_ca,    // CA certificate
+    NULL,
+    NULL,
+    $ssl_ca,
     NULL,
     NULL
 );
@@ -39,34 +39,18 @@ if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
 }
 
-// --- IMAGE UPLOAD HANDLER ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
-    $upload_dir = __DIR__ . '/admin/uploads/';
-    if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+// Supabase Storage configuration
+$supabaseUrl = "https://dhizprsnrfaeowygtqrb.supabase.co";
+$supabaseBucket = "watches";
 
-    $file = $_FILES['image'];
-    if ($file['error'] === 0) {
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $new_name = 'watch_' . uniqid() . '.' . $ext;
-
-        if (move_uploaded_file($file['tmp_name'], $upload_dir . $new_name)) {
-            $name = $_POST['name'] ?? 'Unnamed Watch';
-            $price = $_POST['price'] ?? 0;
-            $description = $_POST['description'] ?? '';
-
-            $stmt = $conn->prepare("INSERT INTO product (name, price, description, image) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("sdss", $name, $price, $description, $new_name);
-            $stmt->execute();
-        }
-    }
-}
-
-// --- GET ACTIVE SALE ---
+// GET ACTIVE SALE
 $active_sale_query = "SELECT * FROM sales WHERE status='active' LIMIT 1";
 $active_sale_result = $conn->query($active_sale_query);
-$active_sale = $active_sale_result ? $active_sale_result->fetch_assoc() : null;
+$active_sale = $active_sale_result
+    ? $active_sale_result->fetch_assoc()
+    : null;
 
-// --- GET ALL product ---
+// GET ALL PRODUCTS
 $product_query = "SELECT * FROM product";
 $product_result = $conn->query($product_query);
 
@@ -75,17 +59,43 @@ $product = [];
 if ($product_result && $product_result->num_rows > 0) {
     while ($row = $product_result->fetch_assoc()) {
 
-        // Image URL is already stored in the database
-        // (Supabase public URL)
-        if (empty($row['image'])) {
-            $row['image'] = "static/default.png";
+        // Fetch image from Supabase Storage
+        $imageValue = trim($row['image'] ?? '');
+        $row['image_url'] = '';
+
+        if ($imageValue !== '') {
+
+            // If database already contains a full URL, use it.
+            if (
+                filter_var($imageValue, FILTER_VALIDATE_URL) &&
+                in_array(
+                    strtolower(parse_url($imageValue, PHP_URL_SCHEME) ?? ''),
+                    ['http', 'https'],
+                    true
+                )
+            ) {
+                $row['image_url'] = $imageValue;
+            } else {
+                // Otherwise, use the filename stored in the database.
+                // Bucket files are assumed to be in the root.
+                $row['image_url'] =
+                    rtrim($supabaseUrl, '/') .
+                    '/storage/v1/object/public/' .
+                    rawurlencode($supabaseBucket) . '/' .
+                    str_replace(
+                        '%2F',
+                        '/',
+                        rawurlencode($imageValue)
+                    );
+            }
         }
 
+        // Calculate sale price
         if ($active_sale && isset($active_sale['discount_percent'])) {
-            $discount = $active_sale['discount_percent'];
+            $discount = (float) $active_sale['discount_percent'];
 
             $row['discounted_price'] = round(
-                $row['price'] * (1 - $discount / 100),
+                (float) $row['price'] * (1 - $discount / 100),
                 2
             );
 
@@ -105,42 +115,51 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Glamaura product - Home</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-<link rel="stylesheet" href="static/styling/user_styling/home.css">
-<!-- Favicon for browsers -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="icon" type="image/png" sizes="32x32" href="/static/icon.webp">
-<link rel="icon" type="image/png" sizes="16x16" href="/static/icon.webp">
+<title>Glamaura - Home</title>
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<link rel="stylesheet"
+      href="static/styling/user_styling/home.css">
+
+<link rel="icon" type="image/webp" sizes="32x32" href="/static/icon.webp">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icon.webp">
 </head>
+
 <body>
+
 <!-- Navbar -->
 <nav class="nav">
     <div class="nav-left">
-        <a href="/"><img class="logo" src="static/logo.webp" alt="wrist-win"></a>
+        <a href="/">
+            <img class="logo" src="static/logo.webp" alt="Glamaura">
+        </a>
     </div>
 
     <div class="nav-right">
         <div class="nav-links">
             <a class="buttons" href="home.php">Home</a>
-             <a class="buttons" href="shop.php">Shop</a>
-             <a class="buttons" href="contact.php">Contact</a>
+            <a class="buttons" href="shop.php">Shop</a>
+            <a class="buttons" href="contact.php">Contact</a>
 
-             <a href="cart.php" class="cart-icon" id="cart-icon"><i class="fa-solid fa-cart-shopping"></i><span class="cart-badge" id="cart-count">0</span></a>
+            <a href="cart.php" class="cart-icon" id="cart-icon">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="cart-badge" id="cart-count">0</span>
+            </a>
         </div>
     </div>
 </nav>
-
 
 <!-- Hero Slider -->
 <div class="slider">
     <div class="slides">
         <div class="slide">
             <div class="banner">
-                <a><img src="static/banner.webp" alt="wrist-win"></a>
+                <img src="static/banner.webp" alt="Glamaura cosmetics">
             </div>
         </div>
     </div>
@@ -150,48 +169,107 @@ $conn->close();
 <div class="home-header">
     <h1>Selling Products</h1>
 
-    <?php if ($active_sale && isset($active_sale['sale_name'], $active_sale['discount_percent'])): ?>
+    <?php if (
+        $active_sale &&
+        isset($active_sale['sale_name'], $active_sale['discount_percent'])
+    ): ?>
         <h2 class="gradient-text">
-            🔥 <?= htmlspecialchars($active_sale['sale_name']) ?> - <?= htmlspecialchars($active_sale['discount_percent']) ?>% OFF!
+            🔥 <?= htmlspecialchars($active_sale['sale_name']) ?>
+            - <?= htmlspecialchars($active_sale['discount_percent']) ?>% OFF!
         </h2>
     <?php endif; ?>
 </div>
 
 <section class="products">
     <div class="product-grid">
+
         <?php if (count($product) > 0): ?>
-            <?php foreach($product as $watch): ?>
+
+            <?php foreach ($product as $watch): ?>
+
                 <div class="product-card">
+
                     <div class="image-container">
-                        <?php if ($watch['discounted_price']): ?>
+
+                        <?php if ($watch['discounted_price'] !== null): ?>
                             <span class="sale-badge">SALE</span>
                         <?php endif; ?>
-                        <img src="<?= htmlspecialchars($watch['image']) ?>" alt="<?= htmlspecialchars($watch['name']) ?>">
-                    </div>
-                    <div class="product-info">
-                        <h3><?= htmlspecialchars($watch['name']) ?></h3>
-                        <p><?= htmlspecialchars($watch['description']) ?></p>
-                        <?php if ($watch['discounted_price']): ?>
-                            <div class="price">
-                                <span class="original-price">Rs. <?= $watch['price'] ?></span>
-                                <span class="discounted-price">Rs. <?= $watch['discounted_price'] ?></span>
-                            </div>
-                        <?php else: ?>
-                            <div class="price"><span class="discounted-price">PKR. <?= $watch['price'] ?></span></div>
+
+                        <?php if ($watch['image_url'] !== ''): ?>
+                            <img
+                                src="<?= htmlspecialchars(
+                                    $watch['image_url'],
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ) ?>"
+                                alt="<?= htmlspecialchars(
+                                    $watch['name'] ?? '',
+                                    ENT_QUOTES,
+                                    'UTF-8'
+                                ) ?>"
+                                loading="lazy"
+                            >
                         <?php endif; ?>
-                        <a href="shop.php"><button>Shop Now</button></a>
+
+                    </div>
+
+                    <div class="product-info">
+
+                        <h3>
+                            <?= htmlspecialchars($watch['name'] ?? '') ?>
+                        </h3>
+
+                        <p>
+                            <?= htmlspecialchars($watch['description'] ?? '') ?>
+                        </p>
+
+                        <?php if ($watch['discounted_price'] !== null): ?>
+
+                            <div class="price">
+                                <span class="original-price">
+                                    Rs. <?= number_format((float) $watch['price'], 2) ?>
+                                </span>
+
+                                <span class="discounted-price">
+                                    Rs. <?= number_format(
+                                        (float) $watch['discounted_price'],
+                                        2
+                                    ) ?>
+                                </span>
+                            </div>
+
+                        <?php else: ?>
+
+                            <div class="price">
+                                <span class="discounted-price">
+                                    PKR. <?= number_format((float) $watch['price'], 2) ?>
+                                </span>
+                            </div>
+
+                        <?php endif; ?>
+
+                        <a href="shop.php">
+                            <button type="button">Shop Now</button>
+                        </a>
+
                     </div>
                 </div>
+
             <?php endforeach; ?>
+
         <?php else: ?>
+
             <p style="color:#ffffff;">No product available yet.</p>
+
         <?php endif; ?>
+
     </div>
 </section>
 
 <!-- Footer -->
 <footer>
     <div class="footer-container">
+
         <div>
             <h3>Customer Support</h3>
             <a href="shipping_policy.php">Shipping Policy</a>
@@ -200,44 +278,88 @@ $conn->close();
             <a href="terms_of_service.php">Terms of Service</a>
             <a href="contact.php">Contact Information</a>
         </div>
+
         <div>
             <h3>About Glamaura</h3>
-            <p>Beauty, skincare, makeup & more — discover your beauty, enhance your glow, all in one place.</p>
+            <p>
+                Beauty, skincare, makeup & more — discover your beauty,
+                enhance your glow, all in one place.
+            </p>
         </div>
+
         <div>
             <h3>Follow Us</h3>
-            <a href="https://wa.me/923372513067" target="_blank" style="color:#25D366;"><i class="fab fa-whatsapp"></i> Whatsapp</a>
-            <a href="https://wa.me/923712421804" target="_blank" style="color:#25D366;"><i class="fab fa-whatsapp"></i> Whatsapp</a>
-            <a href="#" target="_blank" style="color:#E1306C;"><i class="fab fa-instagram"></i> Instagram</a>
-            <a href="#" target="_blank" style="color:#1877F2;"><i class="fab fa-facebook"></i> Facebook</a>
-            <a href="#" target="_blank" style="color:#ffffff;"><i class="fab fa-tiktok"></i> TikTok</a>
-            <a href="mailto: glamauraastore@gmail.com" style="color:#D14836;"><i class="fa-solid fa-envelope"></i> Gmail</a>
+            <a href="https://wa.me/923372513067"
+               target="_blank" rel="noopener noreferrer"
+               style="color:#25D366;">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+
+            <a href="https://wa.me/923712421804"
+               target="_blank" rel="noopener noreferrer"
+               style="color:#25D366;">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+
+            <a href="#" style="color:#E1306C;">
+                <i class="fab fa-instagram"></i> Instagram
+            </a>
+
+            <a href="#" style="color:#1877F2;">
+                <i class="fab fa-facebook"></i> Facebook
+            </a>
+
+            <a href="#" style="color:#ffffff;">
+                <i class="fab fa-tiktok"></i> TikTok
+            </a>
+
+            <a href="mailto:glamauraastore@gmail.com"
+               style="color:#D14836;">
+                <i class="fa-solid fa-envelope"></i> Gmail
+            </a>
         </div>
+
     </div>
-    <p>© 2026 Glamaura product — Crafted with elegance & love.</p>
+
+    <p>© 2026 Glamaura — Crafted with elegance & love.</p>
 </footer>
 
 <script>
-    function updateCartCount() {
+function updateCartCount() {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const count = cart.reduce((acc, item) => acc + item.quantity, 0);
-    document.getElementById("cart-count").textContent = count;
+
+    const count = cart.reduce(
+        (acc, item) => acc + (Number(item.quantity) || 0),
+        0
+    );
+
+    const cartCount = document.getElementById("cart-count");
+
+    if (cartCount) {
+        cartCount.textContent = count;
     }
+}
 
-    /* Call when page loads */
-    document.addEventListener("DOMContentLoaded", updateCartCount);
+document.addEventListener("DOMContentLoaded", updateCartCount);
+window.addEventListener("storage", updateCartCount);
 
-    /* Call when storage changes (other pages like shop.php) */
-    window.addEventListener("storage", updateCartCount);
+// Product scroll animation
+const products = document.querySelectorAll(".product-card");
 
-    // Product scroll animation
-    const products = document.querySelectorAll('.product-card');
+if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver((entries, obs) => {
         entries.forEach(entry => {
-            if(entry.isIntersecting){ entry.target.classList.add('show'); obs.unobserve(entry.target); }
+            if (entry.isIntersecting) {
+                entry.target.classList.add("show");
+                obs.unobserve(entry.target);
+            }
         });
-    }, {threshold: 0.2});
-    products.forEach(p => observer.observe(p));
+    }, { threshold: 0.2 });
+
+    products.forEach(product => observer.observe(product));
+} else {
+    products.forEach(product => product.classList.add("show"));
+}
 </script>
 
 </body>
