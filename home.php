@@ -40,7 +40,8 @@ if ($conn->connect_error) {
 }
 
 // Supabase Storage configuration
-$supabaseUrl = "https://dhizprsnrfaeowygtqrb.supabase.co";
+$supabase_url = getenv("SUPABASE_URL");
+$supabase_url = rtrim($supabase_url, "/");
 $supabaseBucket = "watches";
 
 // GET ACTIVE SALE
@@ -79,7 +80,7 @@ if ($product_result && $product_result->num_rows > 0) {
                 // Otherwise, use the filename stored in the database.
                 // Bucket files are assumed to be in the root.
                 $row['image_url'] =
-                    rtrim($supabaseUrl, '/') .
+                    rtrim($supabase_url , '/') .
                     '/storage/v1/object/public/' .
                     rawurlencode($supabaseBucket) . '/' .
                     str_replace(
