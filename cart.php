@@ -133,6 +133,9 @@
 
             cart.forEach((item, index) => {
                 const p = stockData[item.id] || item;
+                console.log("Cart Item:", item);
+console.log("Stock Product:", stockData[item.id]);
+console.log("Final Product:", p);
 
                 if (item.quantity > p.stock) item.quantity = p.stock;
 
