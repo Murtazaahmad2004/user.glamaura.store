@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="static/styling/user_styling/cart.css">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/icon.webp">
-<link rel="icon" type="image/png" sizes="16x16" href="/static/icon.webp">
-<link rel="apple-touch-icon" sizes="180x180" href="/static/icon.webp">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icon.webp">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icon.webp">
 </head>
 
 <body>
@@ -54,11 +54,10 @@
                 <h3>Follow Us</h3>
                 <a href="https://wa.me/923372513067" target="_blank" style="color:#25D366;"><i
                         class="fab fa-whatsapp"></i> Whatsapp</a>
-                <a href="https://wa.me/923712421804" target="_blank" style="color:#25D366;"><i class="fab fa-whatsapp"></i> Whatsapp</a>
-                <a href="#" target="_blank" style="color:#E1306C;"><i
-                        class="fab fa-instagram"></i> Instagram</a>
-                <a href="#" target="_blank"
-                    style="color:#1877F2;"><i class="fab fa-facebook"></i> Facebook</a>
+                <a href="https://wa.me/923712421804" target="_blank" style="color:#25D366;"><i
+                        class="fab fa-whatsapp"></i> Whatsapp</a>
+                <a href="#" target="_blank" style="color:#E1306C;"><i class="fab fa-instagram"></i> Instagram</a>
+                <a href="#" target="_blank" style="color:#1877F2;"><i class="fab fa-facebook"></i> Facebook</a>
                 <a href="#" target="_blank"><i class="fab fa-tiktok"></i> TikTok</a>
                 <a href="mailto: glamauraastore@gmail.com" style="color:#D14836;"><i class="fa-solid fa-envelope"></i>
                     Gmail</a>
@@ -134,8 +133,8 @@
             cart.forEach((item, index) => {
                 const p = stockData[item.id] || item;
                 console.log("Cart Item:", item);
-console.log("Stock Product:", stockData[item.id]);
-console.log("Final Product:", p);
+                console.log("Stock Product:", stockData[item.id]);
+                console.log("Final Product:", p);
 
                 if (item.quantity > p.stock) item.quantity = p.stock;
 
@@ -147,12 +146,16 @@ console.log("Final Product:", p);
 
                     <div class="cart-details">
                         <h3>${p.name}</h3>
-                        <p>
-                            ${p.discount > 0
-                                        ? `<del>${formatPKR(p.original_price)}</del>
-                                <strong style="color:#0f0;"> ${formatPKR(p.price)}</strong>`
-                                        : formatPKR(p.price)}
-                        </p>
+                        
+                    <p>
+                        ${Number(p.display_price ?? p.price ?? p.original_price ?? 0) < Number(p.original_price ?? 0)
+                                            ? `<del>${formatPKR(p.original_price)}</del>
+                            <strong style="color:#0f0;">
+                                ${formatPKR(p.display_price ?? p.price ?? 0)}
+                            </strong>`
+                                            : formatPKR(p.display_price ?? p.price ?? p.original_price ?? 0)}
+                    </p>
+
                         <p style="color:yellow;">
                             ${p.stock > 0 ? "Stock: " + p.stock : "Out of Stock"}
                         </p>
