@@ -2,7 +2,7 @@
    GLAMAURA — Design System (Midnight · Champagne Gold · Rose Gold)
    Styling only: no markup or logic is changed.
    ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap'); */
 
 :root {
     --midnight: #0D131F;
