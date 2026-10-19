@@ -138,7 +138,7 @@
 
                 if (item.quantity > p.stock) item.quantity = p.stock;
 
-                total += p.display_price * item.quantity;
+                total += p.price * item.quantity;
 
                 cartContainer.innerHTML += `
                 <div class="cart-item">
