@@ -489,7 +489,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     sendJson([
       "status" => "success",
       "message" => "Your order has been placed successfully.",
-      "whatsapp" => $whatsapp_url,
       "email_sent" => $mailSent
     ]);
 
