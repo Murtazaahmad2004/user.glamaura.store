@@ -134,6 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // -------------------------------
         // Admin notification
         // -------------------------------
+        $admin_app_mail = getenv("ADMIN_APP_EMAIL");
+        $admin_app_password = getenv("ADMIN_APP_PASSWORD");
         $admin_phone = getenv("ADMIN_PHONE"); 
         $admin_email = getenv("ADMIN_MAIL");
 
