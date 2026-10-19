@@ -378,44 +378,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $conn->commit();
     $transactionStarted = false;
 
-    // The order is now saved.
-    // Notification failures must not cancel the order.
-
-    // -----------------------------------------
-    // 10. CREATE WHATSAPP NOTIFICATION
-    // -----------------------------------------
-
-    $admin_phone = getenv("ADMIN_PHONE") ?: "";
-
-    // Use international format without + or spaces.
-    $admin_phone = preg_replace(
-      '/\D+/',
-      '',
-      $admin_phone
-    );
-
-    $whatsapp_message =
-      "New Glamaura Order Received!\n\n" .
-      "Customer: $name\n" .
-      "Email: $email\n" .
-      "Phone: $phone\n" .
-      "Address: $address, $city, $postal, $country\n\n" .
-      "Order Items:\n$item_text\n" .
-      "Total: Rs " . number_format($total, 2) . "\n" .
-      "Payment: $payment_method\n" .
-      "Sale Status: $sale_status\n\n" .
-      "Please confirm the order.";
-
-    $whatsapp_url = "";
-
-    if ($admin_phone !== "") {
-      $whatsapp_url =
-        "https://wa.me/" .
-        $admin_phone .
-        "?text=" .
-        rawurlencode($whatsapp_message);
-    }
-
     // -----------------------------------------
     // 11. SEND ADMIN EMAIL USING GMAIL SMTP
     // -----------------------------------------
