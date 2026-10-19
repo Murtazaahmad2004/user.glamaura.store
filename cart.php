@@ -138,7 +138,7 @@
 
                 if (item.quantity > p.stock) item.quantity = p.stock;
 
-                total += p.price * item.quantity;
+                total += p.display_price * item.quantity;
 
                 cartContainer.innerHTML += `
                 <div class="cart-item">
@@ -149,11 +149,11 @@
                         
                     <p>
                         ${Number(p.display_price ?? p.price ?? p.original_price ?? 0) < Number(p.original_price ?? 0)
-                                            ? `<del>${formatPKR(p.original_price)}</del>
+                                ? `<del>${formatPKR(p.original_price)}</del>
                             <strong style="color:#0f0;">
                                 ${formatPKR(p.display_price ?? p.price ?? 0)}
                             </strong>`
-                                            : formatPKR(p.display_price ?? p.price ?? p.original_price ?? 0)}
+                                : formatPKR(p.display_price ?? p.price ?? p.original_price ?? 0)}
                     </p>
 
                         <p style="color:yellow;">
