@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
 // =============================================
 // GLAMAURA CHECKOUT - PHP + TiDB + Gmail SMTP
 // =============================================
