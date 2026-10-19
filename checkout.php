@@ -322,7 +322,7 @@ $conn->close();
         You will receive a confirmation call shortly to verify your order.<br>
         Once confirmed, your order will be <strong>processed within 24 hours</strong> and shipped with <strong>free delivery across Pakistan</strong>.<br>
         Standard delivery time is <strong>3–6 business days</strong>, depending on your location.<br>
-        For any shipping-related queries, please contact our <strong>support team</strong> anytime.<br><br>
+        For any shipping-related queries, please contact our <strong>support team</strong> anytime.<br>
         <i class="fa-solid fa-truck-fast"></i> Thank you for shopping with us — your satisfaction is our priority!
       </p>
 
