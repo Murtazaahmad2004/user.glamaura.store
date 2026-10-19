@@ -134,8 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // -------------------------------
         // Admin notification
         // -------------------------------
-        $admin_phone = "923372513067"; 
-        $admin_email = "glamauraastore@gmail.com";
+        $admin_phone = getenv("ADMIN_PHONE"); 
+        $admin_email = getenv("ADMIN_MAIL");
 
         $item_text = "";
         foreach ($cart as $it) {
