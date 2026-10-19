@@ -172,8 +172,6 @@ $conn->close();
     <!-- Filters -->
     <div class="filter-buttons">
         <button class="active" onclick="filterCategory('all', this)">All</button>
-        <button onclick="filterCategory('men', this)">Men</button>
-        <button onclick="filterCategory('women', this)">Women</button>
     </div>
 
     <!-- Product GRID -->
