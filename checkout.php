@@ -412,7 +412,22 @@ document.addEventListener("DOMContentLoaded", function () {
       method: "POST",
       body: formData
     });
-    const result = await response.json();
+    
+const responseText = await response.text();
+
+console.log("Checkout HTTP Status:", response.status);
+console.log("Checkout PHP Response:", responseText);
+
+let result;
+
+try {
+    result = JSON.parse(responseText);
+} catch (error) {
+    console.error("Invalid JSON response:", error);
+    alert("Checkout mein PHP error hai. F12 Console check karein.");
+    return;
+}
+
 
     if (result.status === "success") {
       if (result.whatsapp) window.open(result.whatsapp, "_blank");
