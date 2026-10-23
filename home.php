@@ -51,55 +51,72 @@ $active_sale = $active_sale_result
     ? $active_sale_result->fetch_assoc()
     : null;
 
+// Helper: convert a database image value into a usable image URL.
+function getPublicImageUrl($imageValue, $supabaseUrl, $bucket)
+{
+    $imageValue = trim((string) $imageValue);
+    if ($imageValue === '') {
+        return '';
+    }
+
+    if (
+        filter_var($imageValue, FILTER_VALIDATE_URL) &&
+        in_array(strtolower(parse_url($imageValue, PHP_URL_SCHEME) ?? ''), ['http', 'https'], true)
+    ) {
+        return $imageValue;
+    }
+
+    return rtrim($supabaseUrl, '/') .
+        '/storage/v1/object/public/' . rawurlencode($bucket) . '/' .
+        str_replace('%2F', '/', rawurlencode($imageValue));
+}
+
 // GET ALL PRODUCTS
 $product_query = "SELECT * FROM product";
 $product_result = $conn->query($product_query);
-
 $product = [];
 
 if ($product_result && $product_result->num_rows > 0) {
     while ($row = $product_result->fetch_assoc()) {
+        $row['image_urls'] = [];
 
-        // Fetch image from Supabase Storage
-        $imageValue = trim($row['image'] ?? '');
-        $row['image_url'] = '';
+        // Get all images linked to this product. If the table is not available
+        // or has no records, the code falls back to product.image below.
+        if (isset($row['id'])) {
+            $images_query = $conn->prepare(
+                "SELECT image_url FROM product_images WHERE product_id = ? ORDER BY id ASC"
+            );
 
-        if ($imageValue !== '') {
-
-            // If database already contains a full URL, use it.
-            if (
-                filter_var($imageValue, FILTER_VALIDATE_URL) &&
-                in_array(
-                    strtolower(parse_url($imageValue, PHP_URL_SCHEME) ?? ''),
-                    ['http', 'https'],
-                    true
-                )
-            ) {
-                $row['image_url'] = $imageValue;
-            } else {
-                // Otherwise, use the filename stored in the database.
-                // Bucket files are assumed to be in the root.
-                $row['image_url'] =
-                    rtrim($supabase_url , '/') .
-                    '/storage/v1/object/public/' .
-                    rawurlencode($supabaseBucket) . '/' .
-                    str_replace(
-                        '%2F',
-                        '/',
-                        rawurlencode($imageValue)
-                    );
+            if ($images_query) {
+                $productId = (string) $row['id'];
+                $images_query->bind_param('s', $productId);
+                if ($images_query->execute()) {
+                    $images_result = $images_query->get_result();
+                    while ($imageRow = $images_result->fetch_assoc()) {
+                        $url = getPublicImageUrl($imageRow['image_url'] ?? '', $supabase_url, $supabaseBucket);
+                        if ($url !== '') {
+                            $row['image_urls'][] = $url;
+                        }
+                    }
+                }
+                $images_query->close();
             }
         }
 
-        // Calculate sale price
+        // Backward compatibility: use the existing product.image if no gallery images exist.
+        if (empty($row['image_urls'])) {
+            $fallbackUrl = getPublicImageUrl($row['image'] ?? '', $supabase_url, $supabaseBucket);
+            if ($fallbackUrl !== '') {
+                $row['image_urls'][] = $fallbackUrl;
+            }
+        }
+
+        $row['image_url'] = $row['image_urls'][0] ?? '';
+
+        // Calculate sale price.
         if ($active_sale && isset($active_sale['discount_percent'])) {
             $discount = (float) $active_sale['discount_percent'];
-
-            $row['discounted_price'] = round(
-                (float) $row['price'] * (1 - $discount / 100),
-                2
-            );
-
+            $row['discounted_price'] = round((float) ($row['price'] ?? 0) * (1 - $discount / 100), 2);
             $row['discount'] = $discount;
         } else {
             $row['discounted_price'] = null;
@@ -129,6 +146,28 @@ $conn->close();
 
 <link rel="icon" type="image/webp" sizes="32x32" href="/static/icon.webp">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icon.webp">
+
+<style>
+/* Previous/next controls stay inside each product card image. */
+.product-image-slider { position: relative; overflow: hidden; }
+.product-image-slider .product-card-image { display: block; width: 100%; height: 100%; object-fit: contain; }
+.product-image-slider .image-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+    width: 34px; height: 34px; border: 0; border-radius: 50%;
+    background: rgba(15, 20, 32, .82); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s ease, opacity .2s ease;
+}
+.product-image-slider .image-arrow:hover { background: #b88943; }
+.product-image-slider .image-prev { left: 10px; }
+.product-image-slider .image-next { right: 10px; }
+.product-image-slider .image-counter {
+    position: absolute; right: 9px; bottom: 9px; z-index: 2;
+    padding: 4px 8px; border-radius: 12px; background: rgba(15, 20, 32, .75);
+    color: #fff; font-size: 11px; line-height: 1.2;
+}
+</style>
+
 </head>
 
 <body>
@@ -190,26 +229,30 @@ $conn->close();
 
                 <div class="product-card">
 
-                    <div class="image-container">
+                    <div class="image-container product-image-slider"
+                         data-images="<?= htmlspecialchars(json_encode($watch['image_urls'], JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8') ?>">
 
                         <?php if ($watch['discounted_price'] !== null): ?>
                             <span class="sale-badge">SALE</span>
                         <?php endif; ?>
 
-                        <?php if ($watch['image_url'] !== ''): ?>
+                        <?php if (!empty($watch['image_urls'])): ?>
                             <img
-                                src="<?= htmlspecialchars(
-                                    $watch['image_url'],
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                ) ?>"
-                                alt="<?= htmlspecialchars(
-                                    $watch['name'] ?? '',
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                ) ?>"
+                                class="product-card-image"
+                                src="<?= htmlspecialchars($watch['image_urls'][0], ENT_QUOTES, 'UTF-8') ?>"
+                                alt="<?= htmlspecialchars($watch['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                 loading="lazy"
                             >
+
+                            <?php if (count($watch['image_urls']) > 1): ?>
+                                <button type="button" class="image-arrow image-prev" aria-label="Previous image">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <button type="button" class="image-arrow image-next" aria-label="Next image">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                                <span class="image-counter">1 / <?= count($watch['image_urls']) ?></span>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                     </div>
@@ -343,6 +386,34 @@ function updateCartCount() {
 
 document.addEventListener("DOMContentLoaded", updateCartCount);
 window.addEventListener("storage", updateCartCount);
+
+
+// Product card image arrows: each card cycles through its own image list.
+document.querySelectorAll('.product-image-slider').forEach((slider) => {
+    let images = [];
+    try {
+        images = JSON.parse(slider.dataset.images || '[]');
+    } catch (error) {
+        console.error('Could not read product image list:', error);
+    }
+
+    const image = slider.querySelector('.product-card-image');
+    const previous = slider.querySelector('.image-prev');
+    const next = slider.querySelector('.image-next');
+    const counter = slider.querySelector('.image-counter');
+
+    if (!image || images.length < 2) return;
+    let currentIndex = 0;
+
+    const showImage = (index) => {
+        currentIndex = (index + images.length) % images.length;
+        image.src = images[currentIndex];
+        if (counter) counter.textContent = `${currentIndex + 1} / ${images.length}`;
+    };
+
+    if (previous) previous.addEventListener('click', () => showImage(currentIndex - 1));
+    if (next) next.addEventListener('click', () => showImage(currentIndex + 1));
+});
 
 // Product scroll animation
 const products = document.querySelectorAll(".product-card");
