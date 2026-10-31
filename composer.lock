@@ -4,8 +4,48 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c7173d6a700b02b111e51b703acd8c8e",
+    "content-hash": "62deb41573c2e258fd7bf18a1903b7e4",
     "packages": [
+        {
+            "name": "getsafepay/safepay-php",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/getsafepay/safepay-php.git",
+                "reference": "8d61d8152fc643a12897bc65b308b91cda154b93"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/getsafepay/safepay-php/zipball/8d61d8152fc643a12897bc65b308b91cda154b93",
+                "reference": "8d61d8152fc643a12897bc65b308b91cda154b93",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Safepay\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Matiullah",
+                    "email": "mati_ullah31@yahoo.com"
+                }
+            ],
+            "description": "Official PHP SDK for Safepay Checkout",
+            "support": {
+                "issues": "https://github.com/getsafepay/safepay-php/issues",
+                "source": "https://github.com/getsafepay/safepay-php/tree/v1.0.0"
+            },
+            "time": "2022-08-18T09:26:59+00:00"
+        },
         {
             "name": "phpmailer/phpmailer",
             "version": "v7.1.1",

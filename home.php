@@ -71,6 +71,20 @@ function getPublicImageUrl($imageValue, $supabaseUrl, $bucket)
         str_replace('%2F', '/', rawurlencode($imageValue));
 }
 
+// Product wise active sales
+$product_sales = [];
+$ps = $conn->query(
+    "SELECT product_id, discount_percent FROM product_sales
+     WHERE status='active'
+       AND (start_date IS NULL OR start_date <= CURDATE())
+       AND (end_date IS NULL OR end_date >= CURDATE())"
+);
+if ($ps) {
+    while ($r = $ps->fetch_assoc()) {
+        $product_sales[(string)$r['product_id']] = (float)$r['discount_percent'];
+    }
+}
+
 // GET ALL PRODUCTS
 $product_query = "SELECT * FROM product";
 $product_result = $conn->query($product_query);
@@ -113,10 +127,13 @@ if ($product_result && $product_result->num_rows > 0) {
 
         $row['image_url'] = $row['image_urls'][0] ?? '';
 
-        // Calculate sale price.
-        if ($active_sale && isset($active_sale['discount_percent'])) {
-            $discount = (float) $active_sale['discount_percent'];
-            $row['discounted_price'] = round((float) ($row['price'] ?? 0) * (1 - $discount / 100), 2);
+        // Pehle product ki apni sale, warna global active sale
+        $discount = $product_sales[(string)$row['id']]
+            ?? ($active_sale['discount_percent'] ?? 0);
+        $discount = (float) $discount;
+
+        if ($discount > 0) {
+            $row['discounted_price'] = round((float)($row['price'] ?? 0) * (1 - $discount / 100), 2);
             $row['discount'] = $discount;
         } else {
             $row['discounted_price'] = null;

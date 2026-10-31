@@ -1,0 +1,21 @@
+{
+  "name": "getsafepay/safepay-php",
+  "type": "library",
+  "license": "MIT",
+  "description": "Official PHP SDK for Safepay Checkout",
+  "authors": [
+    {
+      "name": "Matiullah",
+      "email": "mati_ullah31@yahoo.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "Safepay\\": "src"
+    }
+  }
+}
